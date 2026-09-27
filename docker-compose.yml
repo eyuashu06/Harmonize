@@ -1,0 +1,114 @@
+name: harmonyhub
+
+x-common-env: &common-env
+  environment:
+    - ENVIRONMENT=${ENVIRONMENT:-development}
+    - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    - DATABASE_URL=postgresql+psycopg://harmonyhub:${POSTGRES_PASSWORD:-harmonyhub_dev_pw}@postgres:5432/${POSTGRES_DB:-harmonyhub}
+    - REDIS_URL=redis://redis:6379/0
+    - JWT_SECRET=${JWT_SECRET}
+    - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+    - JWT_EXPIRES_MINUTES=${JWT_EXPIRES_MINUTES:-43200}
+    - API_CORS_ORIGINS=${API_CORS_ORIGINS}
+    - FIREBASE_CREDENTIALS_PATH=${FIREBASE_CREDENTIALS_PATH}
+    - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+    - UPLOAD_DIR=${UPLOAD_DIR:-/data/uploads}
+    - ANALYSIS_DIR=${ANALYSIS_DIR:-/data/analysis}
+
+x-dns: &default-dns
+  dns:
+    - 8.8.8.8
+    - 8.8.4.4
+    - 1.1.1.1
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: harmonyhub-postgres
+    restart: unless-stopped
+    <<: *default-dns
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-harmonyhub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-harmonyhub_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-harmonyhub}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-harmonyhub} -d ${POSTGRES_DB:-harmonyhub}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: harmonyhub-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: harmonyhub-api
+    restart: unless-stopped
+    <<: *common-env
+    ports:
+      - "${API_PORT:-8001}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - api_data:/data
+      - ${FIREBASE_CREDENTIALS_HOST_PATH:-/dev/null}:/run/secrets/firebase-service-account.json:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8001}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+    container_name: harmonyhub-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NEXT_PUBLIC_API_URL=http://localhost:${API_PORT:-8001}
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_data:
