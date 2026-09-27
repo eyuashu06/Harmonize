@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected the documented api port in `README.md`, `PROJECT_SUMMARY.md`, and
   `docs/deployment.md`.
 
+### Changed
+
+- `pyproject.toml` now discovers `app*` and `scripts*` packages instead of only
+  the top-level `app` module. Non-editable installs previously produced a wheel
+  containing just `app/__init__.py` and `app/main.py`, with every feature
+  subpackage missing.
+- The CI lint step no longer swallows ruff failures with `|| true`.
+
 ## [0.1.0] — 2026-07-15
 
 ### Added
