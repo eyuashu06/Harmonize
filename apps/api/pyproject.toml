@@ -60,8 +60,8 @@ dev = [
   "types-passlib==1.7.7.20240819",
 ]
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["app*", "scripts*"]
 
 [tool.ruff]
 line-length = 100
