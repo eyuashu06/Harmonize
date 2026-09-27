@@ -72,9 +72,9 @@ make seed         # (optional) seed demo songs
 
 Open:
 * Web → http://localhost:3000
-* API → http://localhost:8000
-* OpenAPI docs → http://localhost:8000/docs
-* ReDoc → http://localhost:8000/redoc
+* API → http://localhost:8001
+* OpenAPI docs → http://localhost:8001/docs
+* ReDoc → http://localhost:8001/redoc
 
 ### 4. Local development (without Docker)
 
@@ -83,7 +83,7 @@ Open:
 cd apps/api
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 
 # Frontend (separate terminal)
 cd apps/web

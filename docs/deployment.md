@@ -45,7 +45,7 @@ docker compose exec api python -m scripts.seed
 
 Verify:
 
-* `curl http://localhost:8000/healthz` → `{"status":"ok"}`
+* `curl http://localhost:8001/healthz` → `{"status":"ok"}`
 * `curl http://localhost:3000/` → 200 with the app HTML
 
 ## 5. Reverse proxy & TLS

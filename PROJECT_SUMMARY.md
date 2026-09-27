@@ -61,4 +61,4 @@ make seed                  # load 3 demo songs
 open http://localhost:3000
 ```
 
-API is at `http://localhost:8000` with auto-generated docs at `/docs`.
+API is at `http://localhost:8001` with auto-generated docs at `/docs`.
