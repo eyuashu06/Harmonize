@@ -1,6 +1,6 @@
 // Centralized API client. All requests go through here so we can attach the
 // auth token, surface typed errors, and configure the base URL in one place.
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
 export class ApiError extends Error {
   status: number;
