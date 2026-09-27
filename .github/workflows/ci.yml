@@ -42,8 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]" || pip install -e .
       - name: Lint
-        run: |
-          ruff check . || true
+        run: ruff check .
       - name: Test
         run: |
           pytest -q --maxfail=1 --disable-warnings
