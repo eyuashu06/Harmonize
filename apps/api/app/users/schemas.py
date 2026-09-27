@@ -28,7 +28,7 @@ class UserOut(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: EmailStr | None
+    email: str | None
     avatar_url: str | None
     role: str
     is_active: bool

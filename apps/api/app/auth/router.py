@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.auth.deps import issue_session_for_firebase
@@ -23,7 +23,7 @@ class SessionOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user_id: str
-    email: EmailStr | None = None
+    email: str | None = None
 
 
 @router.post("/session", response_model=SessionOut, summary="Exchange a Firebase ID token for a backend JWT")
