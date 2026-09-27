@@ -7,6 +7,7 @@ returns a backend-issued JWT. Subsequent requests use that JWT.
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, Header
@@ -70,13 +71,14 @@ def issue_session_for_firebase(id_token: str, db: Session) -> user_models.User:
     claims = verify_firebase_id_token(id_token)
     firebase_uid = claims.get("uid") or claims.get("user_id") or claims.get("sub")
     email = claims.get("email")
-    name = claims.get("name") or claims.get("email", "").split("@")[0]
+    name = claims.get("name") or (email or "").split("@")[0]
     picture = claims.get("picture")
     provider = claims.get("firebase", {}).get("sign_in_provider", "firebase")
 
     if not firebase_uid:
         raise AuthError("Firebase token missing user identifier.")
 
+    now = datetime.now(tz=UTC)
     user = db.query(user_models.User).filter(user_models.User.firebase_uid == firebase_uid).one_or_none()
     if user is None and email:
         user = db.query(user_models.User).filter(user_models.User.email == email).one_or_none()
@@ -92,11 +94,11 @@ def issue_session_for_firebase(id_token: str, db: Session) -> user_models.User:
             auth_provider=provider.split(".")[-1] if provider else "firebase",
             role="user",
             is_active=True,
+            last_seen_at=now,
         )
         db.add(user)
     else:
-        # Update last seen & profile
-        user.last_seen_at = user.__class__.last_seen_at  # placeholder
+        user.last_seen_at = now
     db.commit()
     db.refresh(user)
     return user
