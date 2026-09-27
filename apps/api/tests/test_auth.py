@@ -52,3 +52,44 @@ def test_inactive_user_forbidden(client, db, user):
     token = create_access_token(subject=str(user.id))
     r = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "email",
+    ["dev@example.test", "dev@example.local", "dev@example.invalid", "dev@localhost"],
+)
+def test_session_accepts_reserved_domain_emails(client, email):
+    r = client.post("/api/v1/auth/session", json={"id_token": f"mock-token:{email}"})
+    assert r.status_code == 200
+    assert r.json()["email"] == email
+
+
+def test_get_me_returns_reserved_domain_email(client, db, user):
+    user.email = "dev@example.test"
+    db.add(user)
+    db.commit()
+    token = create_access_token(subject=str(user.id))
+    r = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
+    assert r.json()["email"] == "dev@example.test"
+
+
+def test_session_records_last_seen_at(client, db):
+    r = client.post("/api/v1/auth/session", json={"id_token": "mock-token:seen@example.com"})
+    assert r.status_code == 200
+    token = r.json()["access_token"]
+    user_id = r.json()["user_id"]
+
+    r = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
+    assert r.json()["last_seen_at"] is not None
+
+    r = client.post("/api/v1/auth/session", json={"id_token": "mock-token:seen@example.com"})
+    assert r.status_code == 200
+
+    from app.users.models import User
+
+    db.expire_all()
+    stored = db.get(User, uuid.UUID(user_id))
+    assert stored is not None
+    assert stored.last_seen_at is not None
