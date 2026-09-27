@@ -1,0 +1,61 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.mypy.ini.bak
+
+# --- Node / Next.js ---
+node_modules/
+.pnpm-store/
+.next/
+out/
+build/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Env & secrets ---
+.env
+.env.*
+!.env.example
+secrets/
+firebase-service-account.json
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Data / Uploads ---
+postgres_data/
+redis_data/
+data/
+uploads/
+analysis/
+apps/api/uploads/
+apps/api/analysis/
+*.db
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.ogg
+
+# --- Misc ---
+*.log
+logs/
