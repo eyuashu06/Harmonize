@@ -15,11 +15,10 @@ API           := $(COMPOSE) exec -T api
 WEB           := $(COMPOSE) exec -T web
 PSQL          := $(COMPOSE) exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
-.PHONY: help up down restart logs ps build pull rebuild clean \
-        migrate makedb revision upgrade downgrade seed resetdb \
+.PHONY: help up down restart logs ps build rebuild clean \
+        migrate revision upgrade downgrade seed resetdb \
         api-shell web-shell db-shell redis-shell \
-        test api-test web-test lint format \
-        prisma-format docs-serve
+        test api-test web-test lint format
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n",$$1,$$2}'
